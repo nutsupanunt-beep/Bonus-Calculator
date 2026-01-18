@@ -71,8 +71,8 @@
     <aside class="bg-white/90 backdrop-blur-xl border-r border-slate-200 text-slate-800 shadow-2xl z-30 
                   w-full md:w-72 flex-shrink-0 flex flex-row md:flex-col justify-between p-4 md:p-6 transition-all duration-300">
         
-        <!-- Logo Section -->
-        <div class="flex items-center justify-center md:justify-start w-full cursor-pointer group" onclick="app.showInput()">
+        <!-- Logo Section (Centered) -->
+        <div class="flex items-center justify-center w-full cursor-pointer group" onclick="app.showInput()">
             <div class="relative w-full max-w-[180px]">
                 <img src="Gemini_Generated_Image_3c5x4m3c5x4m3c5x-Photoroom.png" 
                      alt="SANKO Logo" 
@@ -139,7 +139,7 @@
         </div>
 
         <div class="hidden md:block text-[10px] text-slate-400 text-center mt-4 pt-4 border-t border-slate-200">
-            เวอร์ชั่น <span id="footer-version" class="text-slate-600 font-bold">v1.9</span><br>SANKO 3+
+            เวอร์ชั่น <span id="footer-version" class="text-slate-600 font-bold">v2.0</span><br>SANKO 3+
         </div>
     </aside>
 
@@ -157,7 +157,7 @@
                 <i data-lucide="history" class="w-6 h-6 text-slate-400"></i> ประวัติการอัพเดท
             </button>
             <div class="text-center text-xs text-slate-400 pt-4">
-                เวอร์ชั่น <span id="mobile-menu-version">v1.9</span><br>SANKO 3+
+                เวอร์ชั่น <span id="mobile-menu-version">v2.0</span><br>SANKO 3+
             </div>
         </div>
     </div>
@@ -474,7 +474,7 @@
         const app = {
             // Default Config
             defaultConfig: {
-                version: '1.9', // UPDATED
+                version: '2.0', // UPDATED
                 year: 2025,
                 rates: { A: 1.8, B: 1.5, C: 1.2, D: 0.6, F: 0 },
                 specialMoney: [4000, 3000, 2000, 1000], 
@@ -485,7 +485,8 @@
                 ],
                 deductions: { absentPercent: 3, latePercent: 3, warningAmount: 1000, suspendPercent: 50 },
                 history: [
-                    { version: '1.9', date: new Date().toISOString(), details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme)' },
+                    { version: '2.0', date: new Date().toISOString(), details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme) และจัดกึ่งกลางโลโก้' },
+                    { version: '1.9', date: '2025-01-03T04:30:00.000Z', details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme)' },
                     { version: '1.8', date: '2025-01-03T04:00:00.000Z', details: 'ปรับแต่งส่วนหัวบนมือถือให้แสดงโลโก้ชัดเจน และเพิ่มไอคอนในเมนูมือถือ' },
                     { version: '1.7', date: '2025-01-03T03:30:00.000Z', details: 'เพิ่ม Favicon และไอคอนใน README' },
                     { version: '1.6', date: '2025-01-03T03:00:00.000Z', details: 'อัปเกรดเป็นหน้า Dashboard Infographic และเพิ่มกราฟแสดงผล' },
@@ -642,7 +643,7 @@
                     if(this.supabase) await this.supabase.from('bonus_config').upsert({ id: 1, config: this.config });
                     this.populateSettingsForm();
                     this.updateYearDisplays(this.config.year);
-                    this.updateVersionDisplays('1.7');
+                    this.updateVersionDisplays('1.9');
                     this.showModal('รีเซ็ตค่าเรียบร้อยแล้ว');
                 });
             },
