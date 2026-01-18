@@ -3,243 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบคำนวณโบนัส (Bonus Calculator)</title>
+    <title>ระบบคำนวณโบนัส (Bonus Calculator) - SANKO 3+</title>
+    <!-- เพิ่ม Favicon (ไอคอนบนแท็บ) -->
+    <link rel="icon" type="image/png" href="Gemini_Generated_Image_3c5x4m3c5x4m3c5x-Photoroom.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Import Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Import Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
-            background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%);
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
         }
         .fade-in {
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.5s ease-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .slide-in-right {
-            animation: slideInRight 0.3s ease-out;
+            animation: slideInRight 0.4s ease-out;
         }
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
-        /* Custom Focus for Enter Navigation */
         input:focus, select:focus, button:focus {
             outline: none;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3); /* Indigo Ring */
-            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(19, 105, 169, 0.3);
+            border-color: #1369a9;
         }
-        
-        /* Modal Styles */
         .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(4px);
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
         }
-
-        /* Scrollbar customization */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
         }
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
+            border-radius: 10px;
         }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
         
-        .version-tag {
-            font-feature-settings: "tnum";
-            font-variant-numeric: tabular-nums;
+        /* Chart Container Styles */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
-<body class="text-gray-800 h-screen flex flex-col md:flex-row overflow-hidden bg-slate-50">
+<body class="text-slate-800 h-screen flex flex-col md:flex-row overflow-hidden bg-slate-100">
 
-    <!-- Sidebar -->
-    <aside class="bg-[#1369a9]/85 backdrop-blur-xl border-r border-white/20 text-white shadow-2xl z-30 
+    <!-- Sidebar (White Theme) -->
+    <aside class="bg-white/90 backdrop-blur-xl border-r border-slate-200 text-slate-800 shadow-2xl z-30 
                   w-full md:w-72 flex-shrink-0 flex flex-row md:flex-col justify-between p-4 md:p-6 transition-all duration-300">
         
         <!-- Logo Section -->
         <div class="flex items-center justify-center md:justify-start w-full cursor-pointer group" onclick="app.showInput()">
-            <div class="relative w-full max-w-[200px]">
+            <div class="relative w-full max-w-[180px]">
                 <img src="Gemini_Generated_Image_3c5x4m3c5x4m3c5x-Photoroom.png" 
                      alt="SANKO Logo" 
-                     class="h-auto w-full object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
+                     class="h-auto w-full object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                 
-                <div class="hidden text-center p-4 border border-white/20 rounded-xl bg-white/10">
-                    <h1 class="text-xl font-bold">SANKO 3+</h1>
-                    <p class="text-xs opacity-75">Bonus Calculator</p>
+                <!-- Fallback Logo (Dark Text for White BG) -->
+                <div class="hidden text-center p-3 border border-slate-200 rounded-xl bg-slate-50">
+                    <h1 class="text-xl font-bold text-slate-800">SANKO 3+</h1>
+                    <p class="text-xs text-slate-500">Bonus System</p>
                 </div>
             </div>
         </div>
 
         <!-- Desktop Navigation -->
-        <div class="hidden md:flex flex-col gap-6 mt-10 flex-1">
-             <div class="bg-gradient-to-br from-white/10 to-white/5 rounded-2xl p-5 border border-white/20 backdrop-blur-sm relative overflow-hidden shadow-lg">
-                <div class="absolute -right-2 -top-2 w-12 h-12 bg-white/10 rounded-full blur-xl"></div>
-                <div class="flex items-start justify-between mb-1 relative z-10">
-                    <p class="text-xs text-blue-50 font-medium">โบนัสประจำปี</p> 
-                    <i data-lucide="calendar" class="w-4 h-4 text-blue-100 opacity-80"></i>
+        <div class="hidden md:flex flex-col gap-6 mt-8 flex-1">
+             <div class="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-5 border border-blue-100 backdrop-blur-md relative overflow-hidden shadow-sm group hover:shadow-md transition">
+                <div class="flex items-start justify-between mb-2 relative z-10">
+                    <p class="text-xs text-blue-600 font-bold uppercase tracking-wider">โบนัสประจำปี</p> 
+                    <i data-lucide="calendar-check" class="w-4 h-4 text-blue-400 opacity-80"></i>
                 </div>
-                <div class="flex items-baseline gap-1.5 relative z-10">
-                    <span class="text-3xl font-bold tracking-tight text-white drop-shadow-sm" id="sidebar-cycle-year">2025</span>
+                <div class="flex items-baseline gap-2 relative z-10">
+                    <span class="text-4xl font-bold tracking-tight text-slate-800 drop-shadow-sm" id="sidebar-cycle-year">2025</span>
                 </div>
-                <!-- Connection Status Indicator -->
-                <div id="db-status" class="mt-2 text-[10px] text-blue-200 flex items-center gap-1 opacity-0 transition-opacity">
-                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div> Cloud Connected
+                <!-- Connection Status -->
+                <div id="db-status" class="mt-3 text-[10px] text-slate-500 flex items-center gap-1.5 opacity-0 transition-opacity">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    Cloud Connected
                 </div>
             </div>
             
-            <nav class="space-y-2">
-                <p class="text-xs text-blue-100/80 font-bold uppercase tracking-wider px-2 shadow-black/5">เมนูหลัก</p>
+            <nav class="space-y-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest px-2">Main Menu</p>
                 
-                <button onclick="app.showInput()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/20 active:bg-white/30 transition text-left group focus:bg-white/20 focus:ring-1 focus:ring-white/40 border border-transparent hover:border-white/10">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-100 group-hover:text-white transition drop-shadow-sm"></i>
-                    <span class="font-medium">หน้าคำนวณ</span>
+                <button onclick="app.showInput()" class="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white hover:bg-blue-50 active:scale-95 transition-all text-left border border-slate-200 shadow-sm group">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition"></i>
+                    <span class="font-medium text-slate-600 group-hover:text-blue-700">หน้าคำนวณ</span>
                 </button>
 
-                <button onclick="app.checkAdminAndShowSettings()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/20 active:bg-white/30 transition text-left group focus:bg-white/20 focus:ring-1 focus:ring-white/40 border border-transparent hover:border-white/10">
-                    <i data-lucide="settings" class="w-5 h-5 text-blue-100 group-hover:text-white transition drop-shadow-sm"></i>
-                    <span class="font-medium">ตั้งค่าระบบ</span>
+                <button onclick="app.checkAdminAndShowSettings()" class="w-full flex items-center gap-3 p-3.5 rounded-xl hover:bg-blue-50 active:scale-95 transition-all text-left border border-transparent hover:border-blue-100 group text-slate-600">
+                    <i data-lucide="settings" class="w-5 h-5 text-slate-400 group-hover:text-blue-600 group-hover:rotate-45 transition-transform duration-500"></i>
+                    <span class="font-medium group-hover:text-blue-700">ตั้งค่าระบบ</span>
                 </button>
 
-                <button onclick="app.showHistory()" class="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/20 active:bg-white/30 transition text-left group focus:bg-white/20 focus:ring-1 focus:ring-white/40 border border-transparent hover:border-white/10">
-                    <i data-lucide="history" class="w-5 h-5 text-blue-100 group-hover:text-white transition drop-shadow-sm"></i>
-                    <span class="font-medium">ประวัติการอัพเดท</span>
+                <button onclick="app.showHistory()" class="w-full flex items-center gap-3 p-3.5 rounded-xl hover:bg-blue-50 active:scale-95 transition-all text-left border border-transparent hover:border-blue-100 group text-slate-600">
+                    <i data-lucide="history" class="w-5 h-5 text-slate-400 group-hover:text-blue-600"></i>
+                    <span class="font-medium group-hover:text-blue-700">ประวัติการอัพเดท</span>
                 </button>
             </nav>
         </div>
 
+        <!-- Mobile Header Actions (Dark Icons for White BG) -->
         <div class="flex md:hidden items-center gap-3">
-             <div class="text-xs bg-white/10 border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse box-shadow-lg"></span>
+             <div class="text-xs bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-full flex items-center gap-2 text-slate-600">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 ปี <span id="header-year-mobile">2025</span>
             </div>
-            <button onclick="app.toggleMobileMenu()" class="p-2 rounded-full hover:bg-white/10 active:bg-white/20 transition">
-                <i data-lucide="menu" class="w-5 h-5"></i>
+            <button onclick="app.toggleMobileMenu()" class="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition">
+                <i data-lucide="menu" class="w-6 h-6"></i>
             </button>
         </div>
 
-        <div class="hidden md:block text-[10px] text-blue-100/70 text-center mt-4 pt-4 border-t border-white/10">
-            เวอร์ชั่น <span id="footer-version" class="text-white font-medium">v1.5</span><br>SANKO 3+
+        <div class="hidden md:block text-[10px] text-slate-400 text-center mt-4 pt-4 border-t border-slate-200">
+            เวอร์ชั่น <span id="footer-version" class="text-slate-600 font-bold">v1.9</span><br>SANKO 3+
         </div>
     </aside>
 
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm hidden md:hidden flex-col justify-end transition-opacity" onclick="app.toggleMobileMenu()">
-        <div class="bg-[#1369a9]/90 backdrop-blur-xl border-t border-white/20 rounded-t-3xl p-6 text-white space-y-4 transform translate-y-0 transition-transform shadow-2xl" onclick="event.stopPropagation()">
-            <div class="w-12 h-1 bg-white/20 rounded-full mx-auto mb-4"></div>
-            <button onclick="app.showInput(); app.toggleMobileMenu()" class="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-3 border border-white/10 transition">
-                <i data-lucide="layout-dashboard" class="w-5 h-5 text-blue-100"></i> หน้าคำนวณ
+    <!-- Mobile Menu Overlay (White Theme) -->
+    <div id="mobile-menu" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden md:hidden flex-col justify-end transition-opacity" onclick="app.toggleMobileMenu()">
+        <div class="bg-white rounded-t-3xl p-6 text-slate-800 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+            <button onclick="app.showInput(); app.toggleMobileMenu()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-4 text-lg font-medium text-slate-700">
+                <i data-lucide="layout-dashboard" class="w-6 h-6 text-blue-600"></i> หน้าคำนวณ
             </button>
-            <button onclick="app.checkAdminAndShowSettings(); app.toggleMobileMenu()" class="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-3 border border-white/10 transition">
-                <i data-lucide="settings" class="w-5 h-5 text-blue-100"></i> ตั้งค่าระบบ
+            <button onclick="app.checkAdminAndShowSettings(); app.toggleMobileMenu()" class="w-full p-4 hover:bg-slate-50 rounded-2xl flex items-center gap-4 text-lg text-slate-600">
+                <i data-lucide="settings" class="w-6 h-6 text-slate-400"></i> ตั้งค่าระบบ
             </button>
-             <button onclick="app.showHistory(); app.toggleMobileMenu()" class="w-full p-4 bg-white/10 hover:bg-white/20 rounded-xl flex items-center gap-3 border border-white/10 transition">
-                <i data-lucide="history" class="w-5 h-5 text-blue-100"></i> ประวัติการอัพเดท
+             <button onclick="app.showHistory(); app.toggleMobileMenu()" class="w-full p-4 hover:bg-slate-50 rounded-2xl flex items-center gap-4 text-lg text-slate-600">
+                <i data-lucide="history" class="w-6 h-6 text-slate-400"></i> ประวัติการอัพเดท
             </button>
-            <div class="text-center text-xs text-blue-200/50 pt-2">
-                เวอร์ชั่น <span id="mobile-menu-version">v1.5</span><br>SANKO 3+
+            <div class="text-center text-xs text-slate-400 pt-4">
+                เวอร์ชั่น <span id="mobile-menu-version">v1.9</span><br>SANKO 3+
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto relative scroll-smooth p-4 md:p-8 bg-transparent">
-        <div class="max-w-4xl mx-auto pb-10">
+    <main class="flex-1 overflow-y-auto relative scroll-smooth p-4 md:p-8">
+        <div class="max-w-5xl mx-auto pb-12">
 
             <!-- PAGE: INPUT -->
             <div id="page-input" class="fade-in space-y-6">
                 <div class="md:hidden h-2"></div>
-                <!-- ... (Input Fields as before) ... -->
-                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-indigo-50/80 px-6 py-4 border-b border-indigo-100 flex items-center gap-3">
-                        <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><i data-lucide="user" class="w-5 h-5"></i></div>
-                        <h2 class="font-bold text-indigo-900 text-lg">1. ข้อมูลพนักงานและอายุงาน</h2>
+                
+                <!-- Section 1: Employee Data -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100 flex items-center gap-3">
+                        <div class="p-2 bg-white text-blue-600 rounded-xl shadow-sm"><i data-lucide="user" class="w-5 h-5"></i></div>
+                        <h2 class="font-bold text-slate-800 text-lg">1. ข้อมูลพนักงานและอายุงาน</h2>
                     </div>
-                    <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">เงินเดือน (บาท) <span class="text-red-500">*</span></label>
-                            <input type="number" id="salary" class="w-full px-4 py-3 border border-slate-200 rounded-xl transition bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100" placeholder="เช่น 15000">
+                            <label class="block text-sm font-semibold text-slate-600 mb-2">เงินเดือน (บาท) <span class="text-red-500">*</span></label>
+                            <input type="number" id="salary" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition" placeholder="เช่น 15000">
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">ค่าตำแหน่ง (บาท)</label>
-                            <input type="number" id="position-allowance" class="w-full px-4 py-3 border border-slate-200 rounded-xl transition bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100" placeholder="เช่น 0" value="0">
+                            <label class="block text-sm font-semibold text-slate-600 mb-2">ค่าตำแหน่ง (บาท)</label>
+                            <input type="number" id="position-allowance" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition" placeholder="เช่น 0" value="0">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">วันที่เริ่มงาน <span class="text-red-500">*</span></label>
-                            <input type="date" id="start-date" class="w-full px-4 py-3 border border-slate-200 rounded-xl transition bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-100">
-                            <p class="text-xs text-slate-500 mt-2 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> ใช้คำนวณอัตราอายุงานและเงินช่วยเหลือพิเศษ</p>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2">วันที่เริ่มงาน <span class="text-red-500">*</span></label>
+                            <input type="date" id="start-date" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition">
+                            <p class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> ใช้คำนวณอัตราอายุงานและเงินช่วยเหลือพิเศษ</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-emerald-50/80 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
-                        <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
-                        <h2 class="font-bold text-emerald-900 text-lg">2. ผลการปฏิบัติงานและการมาทำงาน</h2>
+                <!-- Section 2: Performance -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4 border-b border-emerald-100 flex items-center gap-3">
+                        <div class="p-2 bg-white text-emerald-600 rounded-xl shadow-sm"><i data-lucide="bar-chart-2" class="w-5 h-5"></i></div>
+                        <h2 class="font-bold text-slate-800 text-lg">2. ผลการปฏิบัติงานและการมาทำงาน</h2>
                     </div>
-                    <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div class="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">เกรดประเมินผล (Grade)</label>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2">เกรดประเมินผล (Grade)</label>
                             <div class="relative">
-                                <select id="grade" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white appearance-none cursor-pointer focus:ring-2 focus:ring-emerald-100"></select>
+                                <select id="grade" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white appearance-none cursor-pointer"></select>
                                 <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-4 top-4 pointer-events-none"></i>
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">จำนวนวันหยุดงานรวม (วัน)</label>
-                            <input type="number" id="leave-days" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-emerald-100" placeholder="0" value="0">
-                            <p class="text-xs text-emerald-600 mt-2 font-medium">✨ 0 วัน = ได้โบนัสพิเศษ (Perfect Attendance)</p>
+                            <label class="block text-sm font-semibold text-slate-600 mb-2">จำนวนวันหยุดงานรวม (วัน)</label>
+                            <input type="number" id="leave-days" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white transition" placeholder="0" value="0">
+                            <p class="text-xs text-emerald-600 mt-2 font-medium flex items-center gap-1"><i data-lucide="check-circle" class="w-3 h-3"></i> 0 วัน = ได้เบี้ยขยัน (Perfect Attendance)</p>
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-rose-50/80 px-6 py-4 border-b border-rose-100 flex items-center gap-3">
-                         <div class="p-2 bg-rose-100 text-rose-600 rounded-lg"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>
-                        <h2 class="font-bold text-rose-900 text-lg">3. บทลงโทษและวินัย (Deductions)</h2>
+                <!-- Section 3: Deductions -->
+                <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-rose-50 to-orange-50 px-6 py-4 border-b border-rose-100 flex items-center gap-3">
+                         <div class="p-2 bg-white text-rose-600 rounded-xl shadow-sm"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>
+                        <h2 class="font-bold text-slate-800 text-lg">3. บทลงโทษและวินัย (Deductions)</h2>
                     </div>
                     <div class="p-6 md:p-8 space-y-6">
-                        <div class="flex items-center gap-3 p-4 bg-rose-50/50 rounded-xl border border-rose-100 transition hover:bg-rose-50">
-                            <input type="checkbox" id="is-suspended" class="w-5 h-5 text-rose-600 rounded focus:ring-rose-500 border-gray-300 cursor-pointer">
-                            <label for="is-suspended" class="text-sm font-bold text-rose-800 cursor-pointer select-none">ถูกสั่งพักงาน (หักโบนัส <span id="suspend-percent-label">50</span>%)</label>
+                        <div class="flex items-center gap-4 p-4 bg-rose-50 rounded-2xl border border-rose-100 cursor-pointer hover:bg-rose-100 transition" onclick="document.getElementById('is-suspended').click()">
+                            <input type="checkbox" id="is-suspended" class="w-6 h-6 text-rose-600 rounded focus:ring-rose-500 border-gray-300 cursor-pointer pointer-events-none">
+                            <label class="text-sm font-bold text-rose-800 cursor-pointer select-none flex-1">มีประวัติถูกสั่งพักงาน (หักโบนัส <span id="suspend-percent-label">50</span>%)</label>
                         </div>
                         
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">จำนวนหนังสือเตือน</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <label class="block text-xs font-bold text-slate-500 mb-3 uppercase tracking-wider">จำนวนหนังสือเตือน</label>
                                 <div class="relative">
-                                    <input type="number" id="warning-count" class="w-full pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:border-rose-400 focus:ring-rose-400" placeholder="0" value="0">
-                                    <span class="absolute right-3 top-2 text-slate-400 text-xs font-medium">ใบ</span>
+                                    <input type="number" id="warning-count" class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-rose-400 focus:ring-rose-200 placeholder-slate-300" placeholder="0" value="0">
+                                    <span class="absolute right-3 top-2.5 text-slate-400 text-xs font-medium">ใบ</span>
                                 </div>
                                 <p class="text-[10px] text-rose-500 mt-2 font-medium text-right">ใบละ <span id="warning-amount-label">1,000</span> บ.</p>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">จำนวนวันที่ขาดงาน</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <label class="block text-xs font-bold text-slate-600 mb-3 uppercase tracking-wider">จำนวนวันที่ขาดงาน</label>
                                 <div class="relative">
-                                    <input type="number" id="absent-days" class="w-full pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:border-rose-400 focus:ring-rose-400" placeholder="0" value="0">
-                                    <span class="absolute right-3 top-2 text-slate-400 text-xs font-medium">วัน</span>
+                                    <input type="number" id="absent-days" class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-rose-400 focus:ring-rose-200 placeholder-slate-300" placeholder="0" value="0">
+                                    <span class="absolute right-3 top-2.5 text-slate-400 text-xs font-medium">วัน</span>
                                 </div>
                                 <p class="text-[10px] text-rose-500 mt-2 font-medium text-right">หัก <span id="absent-percent-label">3</span>% ต่อวัน</p>
                             </div>
-                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">จำนวนครั้งที่มาสาย</label>
+                            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                <label class="block text-xs font-bold text-slate-600 mb-3 uppercase tracking-wider">จำนวนครั้งที่มาสาย</label>
                                 <div class="relative">
-                                    <input type="number" id="late-times" class="w-full pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:border-rose-400 focus:ring-rose-400" placeholder="0" value="0">
-                                    <span class="absolute right-3 top-2 text-slate-400 text-xs font-medium">ครั้ง</span>
+                                    <input type="number" id="late-times" class="w-full pl-4 pr-10 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-rose-400 focus:ring-rose-200 placeholder-slate-300" placeholder="0" value="0">
+                                    <span class="absolute right-3 top-2.5 text-slate-400 text-xs font-medium">ครั้ง</span>
                                 </div>
                                 <p class="text-[10px] text-rose-500 mt-2 font-medium text-right">หัก <span id="late-percent-label">3</span>% ต่อครั้ง</p>
                             </div>
@@ -247,154 +256,162 @@
                     </div>
                 </div>
 
-                <div class="flex gap-4 pt-4">
-                    <button onclick="app.clearInputs()" class="flex-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-600 font-bold py-4 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 text-lg active:scale-[0.98]">
+                <div class="flex gap-4 pt-2">
+                    <button onclick="app.clearInputs()" class="flex-1 bg-white hover:bg-slate-50 border border-slate-300 text-slate-600 font-bold py-4 rounded-2xl shadow-sm transition active:scale-[0.98] flex items-center justify-center gap-2">
                         <i data-lucide="rotate-ccw" class="w-5 h-5"></i> ล้างค่า
                     </button>
-                    <button id="btn-calculate" onclick="app.calculateBonus()" class="flex-[2] bg-[#1369a9] hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 text-white font-bold py-4 rounded-2xl shadow-lg shadow-blue-200 transform active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg">
-                        <i data-lucide="calculator" class="w-6 h-6"></i> คำนวณโบนัส
+                    <button id="btn-calculate" onclick="app.calculateBonus()" class="flex-[2] bg-[#1369a9] hover:bg-blue-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-200 transform active:scale-[0.98] transition-all flex items-center justify-center gap-3 text-lg group">
+                        <i data-lucide="calculator" class="w-6 h-6 group-hover:rotate-12 transition"></i> คำนวณโบนัส
                     </button>
                 </div>
             </div>
 
-            <!-- PAGE: RESULT -->
-            <div id="page-result" class="hidden slide-in-right">
-                <button onclick="app.showInput()" class="mb-6 text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-semibold text-sm transition py-2 px-4 rounded-lg hover:bg-white border border-transparent hover:border-slate-200">
-                    <i data-lucide="arrow-left" class="w-4 h-4"></i> กลับไปหน้าแก้ไข
-                </button>
-                <div class="bg-gradient-to-br from-[#1369a9] to-blue-800 rounded-3xl shadow-2xl text-white p-8 mb-8 relative overflow-hidden border border-white/10">
-                    <div class="absolute -top-10 -right-10 p-4 opacity-10"><i data-lucide="coins" class="w-48 h-48"></i></div>
-                    <div class="relative z-10">
-                        <p class="text-blue-100 text-sm font-medium mb-2 uppercase tracking-wide">ยอดเงินโบนัสสุทธิ (Final Bonus)</p>
-                        <h2 class="text-5xl md:text-6xl font-bold mb-6 flex items-baseline gap-3">
-                            <span id="final-bonus-display">0.00</span> <span class="text-xl font-normal text-blue-200">บาท</span>
-                        </h2>
-                        <div class="grid grid-cols-2 gap-8 border-t border-white/10 pt-6">
-                            <div>
-                                <p class="text-blue-200 text-xs mb-1">ฐานเงินเดือน + ตำแหน่ง</p>
-                                <p class="font-semibold text-2xl" id="base-salary-display">0</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-blue-200 text-xs mb-1">จำนวนเดือนโบนัสที่ได้</p>
-                                <p class="font-semibold text-2xl text-emerald-300" id="total-months-display">0.00</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8 space-y-8">
-                    <!-- Results Details (same as before) -->
-                    <div>
-                        <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2 text-lg">
-                            <div class="p-1.5 bg-blue-100 text-blue-600 rounded"><i data-lucide="list-checks" class="w-4 h-4"></i></div>
-                            1. อัตราโบนัส (Bonus Rates)
-                        </h3>
-                        <div class="space-y-4 pl-2">
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-600 font-medium">โบนัสคงที่ (Fixed)</span>
-                                <span class="font-mono font-bold bg-slate-100 px-2 py-1 rounded text-slate-700">1.00</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-600">การมาทำงาน <span id="attend-detail" class="text-xs text-slate-400 ml-1"></span></span>
-                                <span class="font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded" id="attend-rate-display">0.00</span>
-                            </div>
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-600">ผลงาน <span id="perf-detail" class="text-xs text-slate-400 ml-1"></span></span>
-                                <span class="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded" id="perf-rate-display">0.00</span>
-                            </div>
-                            <div class="border-t border-dashed border-slate-200 my-2"></div>
-                            <div class="flex justify-between items-center text-sm font-bold text-slate-800">
-                                <span>รวมอัตราตั้งต้น</span>
-                                <span class="font-mono text-lg" id="sum-rate-display">0.00</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100">
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <h4 class="text-sm font-bold text-indigo-900">x อัตราอายุงาน (Service Year Rate)</h4>
-                                <p class="text-xs text-indigo-500 mt-1" id="service-date-detail">เริ่มงาน: -</p>
-                            </div>
-                            <span class="text-2xl font-bold text-indigo-700 bg-white px-3 py-1 rounded-lg shadow-sm" id="service-rate-display">x 1.00</span>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 flex items-center gap-2 text-lg">
-                             <div class="p-1.5 bg-green-100 text-green-600 rounded"><i data-lucide="plus-minus" class="w-4 h-4"></i></div>
-                            2. บวก / หัก (Adjustments)
-                        </h3>
-                        <div class="space-y-4 pl-2">
-                            <div class="flex justify-between items-center text-sm">
-                                <span class="text-slate-600">เงินช่วยเหลือพิเศษ (ตามอายุงาน)</span>
-                                <span class="font-mono font-bold text-emerald-600">+<span id="special-money-display">0</span></span>
-                            </div>
-                            <div id="perfect-attendance-row" class="hidden flex justify-between items-center text-sm bg-emerald-50 p-3 rounded-xl border border-emerald-100">
-                                <span class="text-emerald-800 font-bold flex items-center gap-2"><i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-500"></i> โบนัสพิเศษ (ไม่หยุดงาน)</span>
-                                <span class="font-mono font-bold text-emerald-700 text-lg">+<span id="perfect-attendance-display">0</span></span>
-                            </div>
-                            <div id="deductions-list" class="space-y-3 pt-2"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PAGE: SETTINGS -->
-            <div id="page-settings" class="hidden fade-in">
+            <!-- PAGE: RESULT (Infographic Style) -->
+            <div id="page-result" class="hidden slide-in-right space-y-6">
                 
+                <button onclick="app.showInput()" class="text-slate-500 hover:text-[#1369a9] flex items-center gap-2 font-semibold text-sm transition py-2 px-4 rounded-lg hover:bg-white border border-transparent hover:border-slate-200 w-fit">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> แก้ไขข้อมูล
+                </button>
+
+                <!-- 1. Hero Card: Net Bonus -->
+                <div class="bg-gradient-to-br from-[#1369a9] to-indigo-900 rounded-[2rem] shadow-2xl text-white p-8 relative overflow-hidden border border-white/10">
+                    <div class="absolute -right-10 -top-10 opacity-10"><i data-lucide="coins" class="w-64 h-64"></i></div>
+                    <div class="relative z-10 flex flex-col md:flex-row justify-between items-end gap-6">
+                        <div>
+                            <p class="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">ยอดเงินโบนัสสุทธิ (Net Bonus)</p>
+                            <h2 class="text-5xl md:text-7xl font-bold flex items-baseline gap-3">
+                                <span id="final-bonus-display">0.00</span>
+                                <span class="text-2xl font-medium text-blue-300">THB</span>
+                            </h2>
+                        </div>
+                        <div class="text-right">
+                            <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 inline-block mb-1">
+                                <span class="text-blue-100 text-xs">ฐานเงินเดือนคำนวณ</span>
+                                <span class="block text-xl font-bold" id="base-salary-display">0</span>
+                            </div>
+                            <div class="text-sm text-blue-200 mt-1">
+                                x <span id="total-months-display" class="font-bold text-white text-lg">0.00</span> เดือน
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Charts Section -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Composition Chart -->
+                    <div class="md:col-span-1 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-slate-700 font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-blue-500"></i> โครงสร้างโบนัส
+                        </h3>
+                        <div class="chart-container flex-1">
+                            <canvas id="compositionChart"></canvas>
+                        </div>
+                        <p class="text-xs text-slate-400 text-center mt-2">สัดส่วนที่มาของรายได้โบนัส</p>
+                    </div>
+
+                    <!-- Deduction Analysis -->
+                    <div class="md:col-span-2 bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex flex-col">
+                        <h3 class="text-slate-700 font-bold mb-4 flex items-center gap-2">
+                            <i data-lucide="bar-chart-3" class="w-5 h-5 text-rose-500"></i> วิเคราะห์รายการหัก (Deductions)
+                        </h3>
+                        <div class="chart-container flex-1">
+                            <canvas id="deductionChart"></canvas>
+                        </div>
+                        <div id="no-deduction-msg" class="hidden text-center text-emerald-500 font-bold py-10 bg-emerald-50 rounded-xl">
+                            🎉 ยอดเยี่ยม! ไม่มีการหักเงิน
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Detailed Breakdown Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Rate Factors -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-700 mb-4 border-b pb-2">ตัวคูณโบนัส (Multipliers)</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between items-center p-3 bg-slate-50 rounded-xl">
+                                <span class="text-slate-500 text-sm">โบนัสพื้นฐาน (Fixed)</span>
+                                <span class="font-mono font-bold text-slate-700">1.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-emerald-50/50 rounded-xl">
+                                <span class="text-slate-500 text-sm">การมาทำงาน <span id="attend-detail" class="text-xs text-emerald-500"></span></span>
+                                <span class="font-mono font-bold text-emerald-600" id="attend-rate-display">0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-blue-50/50 rounded-xl">
+                                <span class="text-slate-500 text-sm">ผลงาน <span id="perf-detail" class="text-xs text-blue-500"></span></span>
+                                <span class="font-mono font-bold text-blue-600" id="perf-rate-display">0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-indigo-50 border border-indigo-100 rounded-xl mt-2">
+                                <span class="text-indigo-900 font-bold text-sm">อัตราตั้งต้นรวม</span>
+                                <span class="font-mono font-bold text-indigo-700 text-lg" id="sum-rate-display">0.00</span>
+                            </div>
+                            <div class="flex justify-between items-center p-3 bg-slate-800 text-white rounded-xl">
+                                <div class="flex flex-col">
+                                    <span class="text-xs text-slate-300">อายุงาน (Service Rate)</span>
+                                    <span class="text-[10px] text-slate-400" id="service-date-detail">-</span>
+                                </div>
+                                <span class="font-mono font-bold text-xl text-yellow-400" id="service-rate-display">x 1.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Adjustments -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-700 mb-4 border-b pb-2">รายการบวก/ลบ (Adjustments)</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg"><i data-lucide="gift" class="w-4 h-4"></i></div>
+                                    <span class="text-sm font-medium text-slate-600">เงินช่วยเหลือพิเศษ</span>
+                                </div>
+                                <span class="font-bold text-emerald-600">+<span id="special-money-display">0</span></span>
+                            </div>
+                            
+                            <div id="perfect-attendance-row" class="hidden flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg"><i data-lucide="star" class="w-4 h-4"></i></div>
+                                    <span class="text-sm font-medium text-slate-600">เบี้ยขยัน (Perfect Attendance)</span>
+                                </div>
+                                <span class="font-bold text-emerald-600">+<span id="perfect-attendance-display">0</span></span>
+                            </div>
+
+                            <div id="deductions-list" class="space-y-2 border-t pt-2 mt-2">
+                                <!-- JS Populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE: SETTINGS (Admin) -->
+            <div id="page-settings" class="hidden fade-in">
                 <div class="flex items-center justify-between mb-8">
-                    <button onclick="app.showInput()" class="text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-semibold text-sm transition">
-                        <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i></div>
-                        กลับหน้าหลัก
-                    </button>
+                    <button onclick="app.showInput()" class="text-slate-500 hover:text-[#1369a9] flex items-center gap-2 font-semibold text-sm transition"><div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i></div>กลับหน้าหลัก</button>
                     <h2 class="text-2xl font-bold text-slate-800">ตั้งค่าระบบ</h2>
                     <div class="w-10"></div> 
                 </div>
 
                 <div class="space-y-8">
-                    
-                    <!-- NEW: Supabase Connection Display -->
-                    <div class="bg-blue-50/50 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-blue-200">
+                    <div class="bg-blue-50/50 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-blue-200">
                         <h3 class="font-bold text-blue-900 mb-6 flex items-center gap-3 text-lg">
                             <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="database" class="w-5 h-5"></i></div>
                             ข้อมูลการเชื่อมต่อ (Supabase)
                         </h3>
                         <div class="grid grid-cols-1 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Supabase URL</label>
-                                <input type="text" id="conf-supabase-url" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 focus:outline-none cursor-default" readonly>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Supabase Key</label>
-                                <div class="relative">
-                                    <input type="text" id="conf-supabase-key" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 focus:outline-none cursor-default truncate pr-10" readonly>
-                                    <div class="absolute right-3 top-3 text-slate-400">
-                                        <i data-lucide="lock" class="w-5 h-5"></i>
-                                    </div>
-                                </div>
-                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-2">Supabase URL</label><input type="text" id="conf-supabase-url" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 focus:outline-none cursor-default" readonly></div>
+                            <div><label class="block text-sm font-medium text-slate-700 mb-2">Supabase Key</label><div class="relative"><input type="text" id="conf-supabase-key" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 focus:outline-none cursor-default truncate pr-10" readonly><div class="absolute right-3 top-3 text-slate-400"><i data-lucide="lock" class="w-5 h-5"></i></div></div></div>
                         </div>
                     </div>
 
-                    <!-- Cycle Year -->
-                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg">
-                            <div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><i data-lucide="calendar" class="w-5 h-5"></i></div>
-                            รอบปีการประเมิน
-                        </h3>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">ปีรอบโบนัส (Cycle Year)</label>
-                            <input type="number" id="conf-year" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 transition" placeholder="2024">
-                            <p class="text-xs text-slate-500 mt-2">เปลี่ยนปีเพื่อขยับช่วงวันที่ในการคำนวณอายุงานโดยอัตโนมัติ</p>
-                        </div>
+                    <!-- Config Forms -->
+                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg"><div class="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><i data-lucide="calendar" class="w-5 h-5"></i></div>รอบปีการประเมิน</h3>
+                        <div><label class="block text-sm font-medium text-slate-700 mb-2">ปีรอบโบนัส</label><input type="number" id="conf-year" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-100 transition" placeholder="2025"></div>
                     </div>
 
-                    <!-- Grade Rates -->
-                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg">
-                             <div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg"><i data-lucide="star" class="w-5 h-5"></i></div>
-                            อัตราโบนัสตามเกรด
-                        </h3>
+                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg"><div class="p-2 bg-yellow-100 text-yellow-600 rounded-lg"><i data-lucide="star" class="w-5 h-5"></i></div>อัตราโบนัสตามเกรด</h3>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <!-- Rate Inputs A-D -->
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><label class="block text-xs font-bold text-slate-500 mb-2">Grade A</label><input type="number" step="0.1" id="conf-rate-a" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white"></div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><label class="block text-xs font-bold text-slate-500 mb-2">Grade B</label><input type="number" step="0.1" id="conf-rate-b" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white"></div>
                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100"><label class="block text-xs font-bold text-slate-500 mb-2">Grade C</label><input type="number" step="0.1" id="conf-rate-c" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white"></div>
@@ -402,76 +419,51 @@
                         </div>
                     </div>
 
-                    <!-- Attendance Logic -->
-                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg">
-                            <div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-5 h-5"></i></div>
-                             อัตราการมาทำงาน
-                        </h3>
+                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg"><div class="p-2 bg-blue-100 text-blue-600 rounded-lg"><i data-lucide="clock" class="w-5 h-5"></i></div>อัตราการมาทำงาน</h3>
                         <div class="space-y-3" id="conf-attendance-container"></div>
-                        <p class="text-xs text-slate-400 mt-4 italic">* ระบบจะตรวจสอบตามลำดับ (น้อยกว่าหรือเท่ากับ)</p>
                     </div>
 
-                    <!-- Special Money -->
-                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg">
-                            <div class="p-2 bg-pink-100 text-pink-600 rounded-lg"><i data-lucide="gift" class="w-5 h-5"></i></div>
-                            เงินช่วยเหลือพิเศษ
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 4 (เต็มรอบ)</label><input type="number" id="conf-money-4" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
-                                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 3</label><input type="number" id="conf-money-3" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
-                                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 2</label><input type="number" id="conf-money-2" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
-                                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 1 (รอบท้าย)</label><input type="number" id="conf-money-1" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
-                            </div>
-                            <div class="flex items-center justify-between border-t border-slate-100 pt-4 mt-2 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
-                                <label class="text-sm text-emerald-800 font-bold flex items-center gap-2"><i data-lucide="star" class="w-4 h-4"></i> โบนัสพิเศษ (ไม่หยุดงาน)</label>
-                                <input type="number" id="conf-money-perfect" class="w-36 px-3 py-2 border border-emerald-200 rounded-lg text-right text-emerald-700 font-bold bg-white focus:ring-2 focus:ring-emerald-200">
-                            </div>
+                    <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg"><div class="p-2 bg-pink-100 text-pink-600 rounded-lg"><i data-lucide="gift" class="w-5 h-5"></i></div>เงินช่วยเหลือพิเศษ</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 4</label><input type="number" id="conf-money-4" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 3</label><input type="number" id="conf-money-3" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 2</label><input type="number" id="conf-money-2" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
+                            <div class="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100"><label class="text-sm font-medium text-slate-600">กลุ่ม 1</label><input type="number" id="conf-money-1" class="w-32 px-2 py-1 border border-slate-300 rounded text-right"></div>
+                        </div>
+                        <div class="flex items-center justify-between border-t border-slate-100 pt-4 mt-4 bg-emerald-50/50 p-4 rounded-xl border border-emerald-100">
+                            <label class="text-sm text-emerald-800 font-bold flex items-center gap-2"><i data-lucide="star" class="w-4 h-4"></i> โบนัสพิเศษ (Perfect Attendance)</label>
+                            <input type="number" id="conf-money-perfect" class="w-36 px-3 py-2 border border-emerald-200 rounded-lg text-right text-emerald-700 font-bold bg-white focus:ring-2 focus:ring-emerald-200">
                         </div>
                     </div>
 
-                     <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-2xl shadow-sm border border-slate-200">
-                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg">
-                            <div class="p-2 bg-rose-100 text-rose-600 rounded-lg"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>
-                             ค่าปรับและบทลงโทษ
-                        </h3>
+                     <div class="bg-white/90 backdrop-blur-sm p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                        <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-3 text-lg"><div class="p-2 bg-rose-100 text-rose-600 rounded-lg"><i data-lucide="alert-octagon" class="w-5 h-5"></i></div>ค่าปรับและบทลงโทษ</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div><label class="block text-xs font-bold text-slate-500 mb-2">หักค่าขาดงาน (% ต่อวัน)</label><input type="number" step="0.5" id="conf-deduct-absent" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
-                             <div><label class="block text-xs font-bold text-slate-500 mb-2">หักมาสาย (% ต่อครั้ง)</label><input type="number" step="0.5" id="conf-deduct-late" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
-                            <div><label class="block text-xs font-bold text-slate-500 mb-2">ค่าปรับหนังสือเตือน (บาท/ใบ)</label><input type="number" id="conf-deduct-warn" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
+                            <div><label class="block text-xs font-bold text-slate-500 mb-2">หักค่าขาดงาน (%)</label><input type="number" step="0.5" id="conf-deduct-absent" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
+                             <div><label class="block text-xs font-bold text-slate-500 mb-2">หักมาสาย (%)</label><input type="number" step="0.5" id="conf-deduct-late" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
+                            <div><label class="block text-xs font-bold text-slate-500 mb-2">ค่าปรับใบเตือน (บาท)</label><input type="number" id="conf-deduct-warn" class="w-full px-4 py-3 border border-slate-200 rounded-xl"></div>
                         </div>
                     </div>
 
                     <div class="flex gap-4 pt-4 pb-8">
-                        <button onclick="app.resetConfig()" class="flex-1 px-6 py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">
-                            คืนค่าเดิม
-                        </button>
-                        <button onclick="app.saveConfig()" class="flex-1 px-6 py-4 bg-[#1369a9] text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">
-                            บันทึก
-                        </button>
+                        <button onclick="app.resetConfig()" class="flex-1 px-6 py-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">คืนค่าเดิม</button>
+                        <button onclick="app.saveConfig()" class="flex-1 px-6 py-4 bg-[#1369a9] text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200">บันทึก</button>
                     </div>
-
                 </div>
             </div>
 
-            <!-- PAGE: HISTORY (New) -->
+            <!-- PAGE: HISTORY -->
             <div id="page-history" class="hidden fade-in">
                 <div class="flex items-center justify-between mb-8">
-                    <button onclick="app.showInput()" class="text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-semibold text-sm transition">
-                        <div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i></div>
-                        กลับหน้าหลัก
-                    </button>
+                    <button onclick="app.showInput()" class="text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-semibold text-sm transition"><div class="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm"><i data-lucide="arrow-left" class="w-4 h-4"></i></div>กลับหน้าหลัก</button>
                     <h2 class="text-2xl font-bold text-slate-800">ประวัติการอัพเดท (Version History)</h2>
                     <div class="w-10"></div> 
                 </div>
-                <div class="bg-white/90 backdrop-blur-sm rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-white/90 backdrop-blur-sm rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                     <div id="history-list" class="divide-y divide-slate-100"></div>
-                    <div id="empty-history" class="p-12 text-center text-slate-400 hidden">
-                        <i data-lucide="clock" class="w-12 h-12 mx-auto mb-3 opacity-20"></i>
-                        <p>ยังไม่มีประวัติการบันทึกการตั้งค่า</p>
-                    </div>
+                    <div id="empty-history" class="p-12 text-center text-slate-400 hidden"><i data-lucide="clock" class="w-12 h-12 mx-auto mb-3 opacity-20"></i><p>ยังไม่มีประวัติการบันทึกการตั้งค่า</p></div>
                 </div>
             </div>
 
@@ -482,86 +474,44 @@
         const app = {
             // Default Config
             defaultConfig: {
-                version: '1.5', // Updated to 1.5
+                version: '1.9', // UPDATED
                 year: 2025,
                 rates: { A: 1.8, B: 1.5, C: 1.2, D: 0.6, F: 0 },
                 specialMoney: [4000, 3000, 2000, 1000], 
                 perfectAttendance: 2000,
                 attendanceTiers: [
-                    { limit: 0, rate: 1.8 },
-                    { limit: 3, rate: 1.65 },
-                    { limit: 6, rate: 1.5 },
-                    { limit: 9, rate: 1.2 },
-                    { limit: 12, rate: 0.9 },
-                    { limit: 15, rate: 0.6 },
-                    { limit: 20, rate: 0.3 }
+                    { limit: 0, rate: 1.8 }, { limit: 3, rate: 1.65 }, { limit: 6, rate: 1.5 },
+                    { limit: 9, rate: 1.2 }, { limit: 12, rate: 0.9 }, { limit: 15, rate: 0.6 }, { limit: 20, rate: 0.3 }
                 ],
-                deductions: {
-                    absentPercent: 3,
-                    latePercent: 3,
-                    warningAmount: 1000,
-                    suspendPercent: 50
-                },
-                // Updated History Log
+                deductions: { absentPercent: 3, latePercent: 3, warningAmount: 1000, suspendPercent: 50 },
                 history: [
-                    {
-                        version: '1.5',
-                        date: new Date().toISOString(),
-                        details: 'แสดงข้อมูลการเชื่อมต่อ Supabase ในหน้าตั้งค่า (Read-only)'
-                    },
-                    {
-                        version: '1.4',
-                        date: '2025-01-03T02:00:00.000Z',
-                        details: 'Hardcoded Supabase credentials and removed LocalStorage'
-                    },
-                    {
-                        version: '1.3',
-                        date: '2025-01-03T00:00:00.000Z',
-                        details: 'เพิ่มระบบเชื่อมต่อ Supabase Database'
-                    },
-                    {
-                        version: '1.2',
-                        date: '2025-01-02T00:00:00.000Z',
-                        details: 'เปลี่ยนโลโก้แถบด้านซ้าย'
-                    },
-                    {
-                        version: '1.1',
-                        date: '2025-01-01T00:00:00.000Z',
-                        details: 'ปรับดีไซน์ Sidebar เป็น Glassmorphism, แก้ไขช่องใส่รหัสผ่าน, เพิ่มระบบล้างข้อมูลอัตโนมัติ'
-                    }
+                    { version: '1.9', date: new Date().toISOString(), details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme)' },
+                    { version: '1.8', date: '2025-01-03T04:00:00.000Z', details: 'ปรับแต่งส่วนหัวบนมือถือให้แสดงโลโก้ชัดเจน และเพิ่มไอคอนในเมนูมือถือ' },
+                    { version: '1.7', date: '2025-01-03T03:30:00.000Z', details: 'เพิ่ม Favicon และไอคอนใน README' },
+                    { version: '1.6', date: '2025-01-03T03:00:00.000Z', details: 'อัปเกรดเป็นหน้า Dashboard Infographic และเพิ่มกราฟแสดงผล' },
+                    { version: '1.5', date: '2025-01-03T02:30:00.000Z', details: 'แสดงข้อมูลการเชื่อมต่อ Supabase ในหน้าตั้งค่า (Read-only)' },
+                    { version: '1.4', date: '2025-01-03T02:00:00.000Z', details: 'Hardcoded Supabase credentials and removed LocalStorage' },
+                    { version: '1.3', date: '2025-01-03T00:00:00.000Z', details: 'เพิ่มระบบเชื่อมต่อ Supabase Database' },
+                    { version: '1.2', date: '2025-01-02T00:00:00.000Z', details: 'เปลี่ยนโลโก้แถบด้านซ้าย' },
+                    { version: '1.1', date: '2025-01-01T00:00:00.000Z', details: 'ปรับดีไซน์ Sidebar เป็น Glassmorphism, แก้ไขช่องใส่รหัสผ่าน, เพิ่มระบบล้างข้อมูลอัตโนมัติ' }
                 ],
-                supabaseUrl: 'https://uztnwpyfmzhxybwbhvat.supabase.co', // HARDCODED
-                supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6dG53cHlmbXpoeHlid2JodmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MjU3MjksImV4cCI6MjA4NDMwMTcyOX0.wsUeRzjE1YreKFMl8I2OpzxY09WbVFLUWEs2IENfgVs' // HARDCODED
+                supabaseUrl: 'https://uztnwpyfmzhxybwbhvat.supabase.co', 
+                supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV6dG53cHlmbXpoeHlid2JodmF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MjU3MjksImV4cCI6MjA4NDMwMTcyOX0.wsUeRzjE1YreKFMl8I2OpzxY09WbVFLUWEs2IENfgVs'
             },
             
-            // Current Config (Loaded on init)
             config: {},
             supabase: null,
+            charts: {}, // Store Chart instances
 
-            data: {
-                salary: 0,
-                positionAllowance: 0,
-                startDate: '',
-                grade: 'A',
-                leaveDays: 0,
-                isSuspended: false,
-                warningCount: 0,
-                absentDays: 0,
-                lateTimes: 0
-            },
+            data: { salary: 0, positionAllowance: 0, startDate: '', grade: 'A', leaveDays: 0, isSuspended: false, warningCount: 0, absentDays: 0, lateTimes: 0 },
 
             init() {
                 this.loadConfig();
                 this.updateLabels();
                 this.generateGradeOptions();
-                this.setupEnterKey(); // Setup Enter Key Logic
+                this.setupEnterKey();
                 lucide.createIcons();
-                
-                // Focus on first input
-                setTimeout(() => {
-                    const salInput = document.getElementById('salary');
-                    if(salInput) salInput.focus();
-                }, 100);
+                setTimeout(() => { const salInput = document.getElementById('salary'); if(salInput) salInput.focus(); }, 100);
             },
 
             initSupabase() {
@@ -569,123 +519,70 @@
                     try {
                         this.supabase = window.supabase.createClient(this.config.supabaseUrl, this.config.supabaseKey);
                         document.getElementById('db-status').style.opacity = '1';
-                        // Try to load initial config from Supabase
                         this.fetchConfigFromSupabase();
-                    } catch (e) {
-                        console.error('Supabase init error:', e);
-                        document.getElementById('db-status').style.opacity = '0';
-                    }
+                    } catch (e) { console.error('Supabase init error:', e); document.getElementById('db-status').style.opacity = '0'; }
                 }
             },
 
             toggleMobileMenu() {
                 const menu = document.getElementById('mobile-menu');
-                menu.classList.toggle('hidden');
-                menu.classList.toggle('flex');
+                menu.classList.toggle('hidden'); menu.classList.toggle('flex');
             },
 
-            // --- Admin Check Logic ---
             checkAdminAndShowSettings() {
-                this.showPasswordPrompt((success) => {
-                    if (success) {
-                        this.showSettings();
-                    }
-                });
+                this.showPasswordPrompt((success) => { if (success) this.showSettings(); });
             },
 
             showPasswordPrompt(callback) {
                 const modal = document.createElement('div');
                 modal.className = 'fixed inset-0 modal-overlay z-50 flex items-center justify-center fade-in px-4';
                 modal.innerHTML = `
-                    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl transform transition-all scale-100 border border-slate-100">
+                    <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl scale-100 border border-slate-100">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2.5 bg-blue-100 text-blue-600 rounded-full">
-                                <i data-lucide="lock" class="w-6 h-6"></i>
-                            </div>
+                            <div class="p-2.5 bg-blue-100 text-blue-600 rounded-full"><i data-lucide="lock" class="w-6 h-6"></i></div>
                             <h3 class="text-lg font-bold text-slate-800">กรุณาใส่รหัสผ่าน</h3>
                         </div>
-                        <p class="text-slate-500 mb-4 text-sm">ส่วนนี้สำหรับผู้ดูแลระบบเท่านั้น</p>
-                        <input type="password" id="admin-password-input" class="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="•••••">
-                        <div class="flex gap-3 justify-end">
-                            <button id="modal-cancel" class="px-4 py-2 text-slate-500 font-bold hover:bg-slate-50 rounded-lg transition text-sm">ยกเลิก</button>
-                            <button id="modal-ok" class="px-6 py-2 bg-[#1369a9] text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm">ตกลง</button>
+                        <input type="password" id="admin-password-input" class="w-full px-4 py-3 border border-slate-300 rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none text-center tracking-widest text-lg" placeholder="•••••">
+                        <div class="flex gap-3">
+                            <button id="modal-cancel" class="flex-1 px-4 py-3 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition text-sm">ยกเลิก</button>
+                            <button id="modal-ok" class="flex-1 px-4 py-3 bg-[#1369a9] text-white font-bold rounded-xl hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm">ตกลง</button>
                         </div>
-                    </div>
-                `;
-                
+                    </div>`;
                 document.body.appendChild(modal);
                 lucide.createIcons();
-                
                 const input = modal.querySelector('#admin-password-input');
                 const okBtn = modal.querySelector('#modal-ok');
                 const cancelBtn = modal.querySelector('#modal-cancel');
-
                 setTimeout(() => input.focus(), 50);
-
-                const close = () => {
-                    modal.classList.add('opacity-0');
-                    setTimeout(() => modal.remove(), 200);
-                };
-
+                const close = () => { modal.classList.add('opacity-0'); setTimeout(() => modal.remove(), 200); };
                 const attemptLogin = () => {
-                    if (input.value === 'admin') {
-                        close();
-                        callback(true);
-                    } else {
-                        input.classList.add('border-red-500', 'ring-2', 'ring-red-200');
-                        input.value = '';
-                        input.placeholder = 'รหัสผ่านผิด!';
-                        setTimeout(() => input.focus(), 100);
+                    if (input.value === 'admin') { close(); callback(true); } else {
+                        input.classList.add('border-red-500', 'ring-2', 'ring-red-200'); input.value = ''; input.placeholder = 'ผิดพลาด!'; setTimeout(() => input.focus(), 100);
                     }
                 };
-
                 okBtn.onclick = attemptLogin;
-                
-                input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') attemptLogin();
-                });
-
-                cancelBtn.onclick = () => {
-                    close();
-                    callback(false);
-                };
+                input.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
+                cancelBtn.onclick = () => { close(); callback(false); };
             },
 
-            // --- Configuration & Versioning Logic ---
-            
             loadConfig() {
-                // Initialize with defaults immediately
                 this.config = JSON.parse(JSON.stringify(this.defaultConfig));
-                
                 this.updateYearDisplays(this.config.year);
                 this.updateVersionDisplays(this.config.version);
-                
-                // Initialize Supabase immediately
-                if(this.config.supabaseUrl && this.config.supabaseKey) {
-                    this.initSupabase();
-                }
+                if(this.config.supabaseUrl && this.config.supabaseKey) this.initSupabase();
             },
 
             async fetchConfigFromSupabase() {
                 if(!this.supabase) return;
-                const { data, error } = await this.supabase
-                    .from('bonus_config')
-                    .select('config')
-                    .eq('id', 1)
-                    .single();
-                
+                const { data, error } = await this.supabase.from('bonus_config').select('config').eq('id', 1).single();
                 if (data && data.config) {
-                    // Update local config with cloud config if exists
                     const cloudConfig = data.config;
-                    // Ensure our hardcoded keys persist even if cloud config is old
                     cloudConfig.supabaseUrl = this.defaultConfig.supabaseUrl;
                     cloudConfig.supabaseKey = this.defaultConfig.supabaseKey;
-                    
                     this.config = cloudConfig;
-                    this.populateSettingsForm(); // Refresh UI if open
-                    this.updateYearDisplays(this.config.year); // Refresh UI elements
+                    this.populateSettingsForm();
+                    this.updateYearDisplays(this.config.year);
                     this.updateLabels();
-                    console.log('Config synced from Supabase');
                 }
             },
 
@@ -699,14 +596,13 @@
             updateVersionDisplays(ver) {
                 const footerVer = document.getElementById('footer-version');
                 if(footerVer) footerVer.innerText = 'v' + ver;
-                
                 const mobileMenuVer = document.getElementById('mobile-menu-version');
                 if(mobileMenuVer) mobileMenuVer.innerText = 'v' + ver;
             },
 
             async saveConfig() {
-                // Update Values
                 this.config.year = parseInt(document.getElementById('conf-year').value) || 2025;
+                // ... (reading other config values) ...
                 this.config.rates.A = parseFloat(document.getElementById('conf-rate-a').value) || 0;
                 this.config.rates.B = parseFloat(document.getElementById('conf-rate-b').value) || 0;
                 this.config.rates.C = parseFloat(document.getElementById('conf-rate-c').value) || 0;
@@ -716,117 +612,63 @@
                 this.config.specialMoney[2] = parseFloat(document.getElementById('conf-money-2').value) || 0;
                 this.config.specialMoney[3] = parseFloat(document.getElementById('conf-money-1').value) || 0;
                 this.config.perfectAttendance = parseFloat(document.getElementById('conf-money-perfect').value) || 0;
-
-                // Supabase Creds - Keep from config, do not read from UI (UI hidden)
-                // this.config.supabaseUrl... already set
-                // this.config.supabaseKey... already set
-
-                const tierContainer = document.getElementById('conf-attendance-container');
-                const rows = tierContainer.querySelectorAll('.tier-row');
-                let newTiers = [];
-                rows.forEach(row => {
-                    const limit = parseFloat(row.querySelector('.tier-limit').value);
-                    const rate = parseFloat(row.querySelector('.tier-rate').value);
-                    if (!isNaN(limit) && !isNaN(rate)) {
-                        newTiers.push({ limit, rate });
-                    }
-                });
-                newTiers.sort((a, b) => a.limit - b.limit);
-                this.config.attendanceTiers = newTiers;
-
                 this.config.deductions.absentPercent = parseFloat(document.getElementById('conf-deduct-absent').value) || 0;
                 this.config.deductions.latePercent = parseFloat(document.getElementById('conf-deduct-late').value) || 0;
                 this.config.deductions.warningAmount = parseFloat(document.getElementById('conf-deduct-warn').value) || 0;
 
-                // Log to history
+                // Sync History
                 const currentVer = this.config.version;
-                this.config.history.unshift({
-                    version: currentVer,
-                    date: new Date().toISOString(),
-                    details: `Updated settings (v${currentVer})`
-                });
+                if (this.config.history[0].details !== `Updated settings (v${currentVer})`) {
+                     this.config.history.unshift({ version: currentVer, date: new Date().toISOString(), details: `Updated settings (v${currentVer})` });
+                }
 
-                // Cloud Save ONLY
+                // Cloud Save
                 let cloudMsg = '';
-                if(this.config.supabaseUrl && this.config.supabaseKey) {
-                    if(!this.supabase) this.initSupabase();
-                    if(this.supabase) {
-                        const { error } = await this.supabase
-                            .from('bonus_config')
-                            .upsert({ id: 1, config: this.config });
-                        
-                        if(!error) cloudMsg = '<br><span class="text-green-600 font-bold">บันทึกขึ้น Cloud สำเร็จ</span>';
-                        else cloudMsg = `<br><span class="text-red-500">Cloud Error: ${error.message}</span>`;
-                    }
+                if(this.supabase) {
+                    const { error } = await this.supabase.from('bonus_config').upsert({ id: 1, config: this.config });
+                    if(!error) cloudMsg = '<br><span class="text-green-600 font-bold">บันทึกขึ้น Cloud สำเร็จ</span>';
+                    else cloudMsg = `<br><span class="text-red-500">Cloud Error: ${error.message}</span>`;
                 }
 
                 this.updateYearDisplays(this.config.year);
                 this.updateLabels();
                 this.generateGradeOptions();
-                
-                this.showModal(`บันทึกการตั้งค่าเรียบร้อยแล้ว${cloudMsg}`, 'alert', () => {
-                    this.showInput();
-                });
+                this.showModal(`บันทึกการตั้งค่าเรียบร้อยแล้ว${cloudMsg}`, 'alert', () => this.showInput());
             },
 
             resetConfig() {
-                this.showModal('ต้องการรีเซ็ตค่าทั้งหมดเป็นค่าเริ่มต้นใช่หรือไม่? (ข้อมูลใน Cloud จะถูกเขียนทับ)', 'confirm', async () => {
+                this.showModal('ต้องการรีเซ็ตค่าทั้งหมดเป็นค่าเริ่มต้นใช่หรือไม่?', 'confirm', async () => {
                     this.config = JSON.parse(JSON.stringify(this.defaultConfig));
-                    // Add reset history log
-                    this.config.history = [{
-                        version: '1.0',
-                        date: new Date().toISOString(),
-                        details: 'System Reset to Default'
-                    }];
-                    
-                    // Save reset state to Cloud
-                    if(this.supabase) {
-                         await this.supabase
-                            .from('bonus_config')
-                            .upsert({ id: 1, config: this.config });
-                    }
-
+                    if(this.supabase) await this.supabase.from('bonus_config').upsert({ id: 1, config: this.config });
                     this.populateSettingsForm();
                     this.updateYearDisplays(this.config.year);
-                    this.updateVersionDisplays('1.5');
+                    this.updateVersionDisplays('1.7');
                     this.showModal('รีเซ็ตค่าเรียบร้อยแล้ว');
                 });
             },
 
             populateSettingsForm() {
                 document.getElementById('conf-year').value = this.config.year;
-                
-                // Show values in Read-only inputs
                 document.getElementById('conf-supabase-url').value = this.config.supabaseUrl || '';
                 document.getElementById('conf-supabase-key').value = this.config.supabaseKey || '';
-                
                 document.getElementById('conf-rate-a').value = this.config.rates.A;
                 document.getElementById('conf-rate-b').value = this.config.rates.B;
                 document.getElementById('conf-rate-c').value = this.config.rates.C;
                 document.getElementById('conf-rate-d').value = this.config.rates.D;
-
                 document.getElementById('conf-money-4').value = this.config.specialMoney[0];
                 document.getElementById('conf-money-3').value = this.config.specialMoney[1];
                 document.getElementById('conf-money-2').value = this.config.specialMoney[2];
                 document.getElementById('conf-money-1').value = this.config.specialMoney[3];
-                
                 document.getElementById('conf-money-perfect').value = this.config.perfectAttendance;
-
                 document.getElementById('conf-deduct-absent').value = this.config.deductions.absentPercent;
                 document.getElementById('conf-deduct-late').value = this.config.deductions.latePercent;
                 document.getElementById('conf-deduct-warn').value = this.config.deductions.warningAmount;
-
                 const tierContainer = document.getElementById('conf-attendance-container');
                 tierContainer.innerHTML = '';
                 this.config.attendanceTiers.forEach((tier, index) => {
                     const div = document.createElement('div');
                     div.className = 'flex items-center gap-2 tier-row';
-                    div.innerHTML = `
-                        <span class="text-sm text-gray-600 w-28">ไม่เกิน (วัน):</span>
-                        <input type="number" class="w-20 px-3 py-2 border border-slate-200 rounded-lg text-center tier-limit focus:border-indigo-400" value="${tier.limit}">
-                        <span class="text-sm text-gray-600">ได้ Rate:</span>
-                        <input type="number" step="0.05" class="w-20 px-3 py-2 border border-slate-200 rounded-lg text-center tier-rate focus:border-indigo-400" value="${tier.rate}">
-                    `;
+                    div.innerHTML = `<span class="text-sm text-gray-600 w-28">ไม่เกิน (วัน):</span><input type="number" class="w-20 px-3 py-2 border border-slate-200 rounded-lg text-center tier-limit" value="${tier.limit}"><span class="text-sm text-gray-600">ได้ Rate:</span><input type="number" step="0.05" class="w-20 px-3 py-2 border border-slate-200 rounded-lg text-center tier-rate" value="${tier.rate}">`;
                     tierContainer.appendChild(div);
                 });
             },
@@ -835,33 +677,13 @@
                 const list = document.getElementById('history-list');
                 const empty = document.getElementById('empty-history');
                 list.innerHTML = '';
-
-                if (!this.config.history || this.config.history.length === 0) {
-                    empty.classList.remove('hidden');
-                    return;
-                }
-
+                if (!this.config.history || this.config.history.length === 0) { empty.classList.remove('hidden'); return; }
                 empty.classList.add('hidden');
-                this.config.history.forEach((item, index) => {
-                    const date = new Date(item.date).toLocaleString('th-TH', { 
-                        year: '2-digit', month: 'short', day: 'numeric', 
-                        hour: '2-digit', minute: '2-digit' 
-                    });
-                    
+                this.config.history.forEach((item) => {
+                    const date = new Date(item.date).toLocaleString('th-TH', { year: '2-digit', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                     const div = document.createElement('div');
                     div.className = 'p-5 flex items-start gap-4 hover:bg-slate-50 transition';
-                    div.innerHTML = `
-                        <div class="flex-shrink-0 w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
-                            v${item.version}
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start">
-                                <h4 class="font-bold text-slate-800">${item.details}</h4>
-                                <span class="text-xs text-slate-400 font-medium">${date}</span>
-                            </div>
-                            <p class="text-sm text-slate-500 mt-1">บันทึกการเปลี่ยนแปลงการตั้งค่าระบบ</p>
-                        </div>
-                    `;
+                    div.innerHTML = `<div class="flex-shrink-0 w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">v${item.version}</div><div class="flex-1"><div class="flex justify-between items-start"><h4 class="font-bold text-slate-800">${item.details}</h4><span class="text-xs text-slate-400 font-medium">${date}</span></div><p class="text-sm text-slate-500 mt-1">บันทึกการเปลี่ยนแปลงการตั้งค่าระบบ</p></div>`;
                     list.appendChild(div);
                 });
             },
@@ -876,46 +698,23 @@
             generateGradeOptions() {
                 const sel = document.getElementById('grade');
                 const currentVal = sel.value || 'A';
-                sel.innerHTML = `
-                    <option value="A">A (Rate ${this.config.rates.A}) - ดีเยี่ยม</option>
-                    <option value="B">B (Rate ${this.config.rates.B}) - ดีมาก</option>
-                    <option value="C">C (Rate ${this.config.rates.C}) - ดี</option>
-                    <option value="D">D (Rate ${this.config.rates.D}) - พอใช้</option>
-                    <option value="F">F (Rate ${this.config.rates.F}) - ปรับปรุง</option>
-                `;
+                sel.innerHTML = `<option value="A">A (Rate ${this.config.rates.A}) - ดีเยี่ยม</option><option value="B">B (Rate ${this.config.rates.B}) - ดีมาก</option><option value="C">C (Rate ${this.config.rates.C}) - ดี</option><option value="D">D (Rate ${this.config.rates.D}) - พอใช้</option><option value="F">F (Rate ${this.config.rates.F}) - ปรับปรุง</option>`;
                 sel.value = currentVal;
             },
 
-            // --- Enter Key Navigation Logic ---
             setupEnterKey() {
-                // List of IDs in order of navigation
-                const inputOrder = [
-                    'salary',
-                    'position-allowance',
-                    'start-date',
-                    'grade',
-                    'leave-days',
-                    'btn-calculate' // Target Button ID
-                ];
-
+                const inputOrder = ['salary', 'position-allowance', 'start-date', 'grade', 'leave-days', 'btn-calculate'];
                 inputOrder.forEach((id, index) => {
                     const element = document.getElementById(id);
                     if (element) {
                         element.addEventListener('keydown', function(event) {
                             if (event.key === 'Enter') {
-                                event.preventDefault(); // Prevent default form submit or weird behavior
-                                
+                                event.preventDefault();
                                 const nextIndex = index + 1;
                                 if (nextIndex < inputOrder.length) {
                                     const nextId = inputOrder[nextIndex];
                                     const nextElement = document.getElementById(nextId);
-                                    if (nextElement) {
-                                        nextElement.focus();
-                                        // Optional: Select text in input for easier editing
-                                        if (nextElement.tagName === 'INPUT') {
-                                            nextElement.select();
-                                        }
-                                    }
+                                    if (nextElement) { nextElement.focus(); if (nextElement.tagName === 'INPUT') nextElement.select(); }
                                 }
                             }
                         });
@@ -923,25 +722,13 @@
                 });
             },
 
-            // --- Calculation Logic ---
-
             getServiceYearRate(dateStr) {
                 if (!dateStr) return 0;
                 const start = new Date(dateStr);
                 const cy = this.config.year;
                 const prevY = cy - 1;
                 const d = (y, m, d) => new Date(y, m-1, d);
-
-                if (start < d(prevY, 11, 16)) return 1.00; 
-                if (start <= d(prevY, 12, 15)) return 0.91; 
-                if (start <= d(cy, 1, 15)) return 0.83; 
-                if (start <= d(cy, 2, 15)) return 0.75; 
-                if (start <= d(cy, 3, 15)) return 0.66; 
-                if (start <= d(cy, 4, 15)) return 0.58; 
-                if (start <= d(cy, 5, 15)) return 0.51; 
-                if (start <= d(cy, 6, 15)) return 0.41; 
-                if (start <= d(cy, 7, 15)) return 0.33; 
-                return 0; 
+                if (start < d(prevY, 11, 16)) return 1.00; if (start <= d(prevY, 12, 15)) return 0.91; if (start <= d(cy, 1, 15)) return 0.83; if (start <= d(cy, 2, 15)) return 0.75; if (start <= d(cy, 3, 15)) return 0.66; if (start <= d(cy, 4, 15)) return 0.58; if (start <= d(cy, 5, 15)) return 0.51; if (start <= d(cy, 6, 15)) return 0.41; if (start <= d(cy, 7, 15)) return 0.33; return 0; 
             },
 
             getSpecialMoney(dateStr) {
@@ -950,32 +737,15 @@
                 const cy = this.config.year;
                 const prevY = cy - 1;
                 const d = (y, m, d) => new Date(y, m-1, d);
-
-                if (start < d(prevY, 11, 16)) return this.config.specialMoney[0]; 
-                if (start <= d(cy, 7, 15)) return this.config.specialMoney[1]; 
-                if (start <= d(cy, 9, 15)) return this.config.specialMoney[2]; 
-                if (start <= d(cy, 11, 30)) return this.config.specialMoney[3]; 
-
-                return 0;
+                if (start < d(prevY, 11, 16)) return this.config.specialMoney[0]; if (start <= d(cy, 7, 15)) return this.config.specialMoney[1]; if (start <= d(cy, 9, 15)) return this.config.specialMoney[2]; if (start <= d(cy, 11, 30)) return this.config.specialMoney[3]; return 0; 
             },
 
             getAttendanceRate(days) {
-                const tiers = this.config.attendanceTiers;
-                for (let tier of tiers) {
-                    if (days <= tier.limit) {
-                        return tier.rate;
-                    }
-                }
-                return 0;
+                for (let tier of this.config.attendanceTiers) { if (days <= tier.limit) return tier.rate; } return 0;
             },
 
-            getPerformanceRate(grade) {
-                return this.config.rates[grade] || 0;
-            },
+            getPerformanceRate(grade) { return this.config.rates[grade] || 0; },
 
-            // --- App Control ---
-
-            // New helper to clear inputs silently without prompt
             silentClear() {
                 document.getElementById('salary').value = '';
                 document.getElementById('position-allowance').value = '0';
@@ -986,30 +756,14 @@
                 document.getElementById('warning-count').value = '0';
                 document.getElementById('absent-days').value = '0';
                 document.getElementById('late-times').value = '0';
-                
-                this.data = {
-                    salary: 0,
-                    positionAllowance: 0,
-                    startDate: '',
-                    grade: 'A',
-                    leaveDays: 0,
-                    isSuspended: false,
-                    warningCount: 0,
-                    absentDays: 0,
-                    lateTimes: 0
-                };
+                this.data = { salary: 0, positionAllowance: 0, startDate: '', grade: 'A', leaveDays: 0, isSuspended: false, warningCount: 0, absentDays: 0, lateTimes: 0 };
             },
 
             clearInputs() {
-                this.showModal('คุณต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?', 'confirm', () => {
-                    this.silentClear();
-                    // Reset focus to first input
-                    document.getElementById('salary').focus();
-                });
+                this.showModal('คุณต้องการล้างข้อมูลทั้งหมดใช่หรือไม่?', 'confirm', () => { this.silentClear(); document.getElementById('salary').focus(); });
             },
 
             calculateBonus() {
-                // Read current values first
                 this.data.salary = parseFloat(document.getElementById('salary').value) || 0;
                 this.data.positionAllowance = parseFloat(document.getElementById('position-allowance').value) || 0;
                 this.data.startDate = document.getElementById('start-date').value;
@@ -1020,14 +774,9 @@
                 this.data.absentDays = parseFloat(document.getElementById('absent-days').value) || 0;
                 this.data.lateTimes = parseFloat(document.getElementById('late-times').value) || 0;
 
-                if (!this.data.startDate) {
-                    this.showModal('กรุณาระบุวันที่เริ่มงาน');
-                    return;
-                }
+                if (!this.data.startDate) { this.showModal('กรุณาระบุวันที่เริ่มงาน'); return; }
 
-                // Capture data snapshot for calculation and display
                 const calculationData = { ...this.data };
-
                 const FIXED_BONUS = 1.0;
                 const attendRate = this.getAttendanceRate(calculationData.leaveDays);
                 const perfRate = this.getPerformanceRate(calculationData.grade);
@@ -1035,76 +784,55 @@
                 
                 const sumRates = FIXED_BONUS + attendRate + perfRate;
                 const totalMonths = sumRates * serviceRate;
-
                 const baseSalaryTotal = calculationData.salary + calculationData.positionAllowance;
                 let grossBonus = totalMonths * baseSalaryTotal;
-
                 const specialMoney = this.getSpecialMoney(calculationData.startDate);
-
                 let perfectAttendanceBonus = 0;
-                if (calculationData.leaveDays === 0) {
-                    perfectAttendanceBonus = this.config.perfectAttendance || 0;
-                }
+                if (calculationData.leaveDays === 0) perfectAttendanceBonus = this.config.perfectAttendance || 0;
 
                 let deductions = [];
                 let totalDeductionAmount = 0;
+                let absentDeduct = 0, lateDeduct = 0, warningDeduct = 0, suspendDeduct = 0;
 
                 if (calculationData.absentDays > 0) {
                     const pct = this.config.deductions.absentPercent / 100;
-                    const absentDeduct = grossBonus * (pct * calculationData.absentDays);
-                    deductions.push({ label: `หักขาดงาน (${calculationData.absentDays} วัน x ${this.config.deductions.absentPercent}%)`, amount: absentDeduct });
+                    absentDeduct = grossBonus * (pct * calculationData.absentDays);
+                    deductions.push({ label: `ขาดงาน (${calculationData.absentDays} วัน)`, amount: absentDeduct });
                     totalDeductionAmount += absentDeduct;
                 }
-
                 if (calculationData.lateTimes > 0) {
                     const pct = this.config.deductions.latePercent / 100;
-                    const lateDeduct = grossBonus * (pct * calculationData.lateTimes);
-                    deductions.push({ label: `หักมาสาย (${calculationData.lateTimes} ครั้ง x ${this.config.deductions.latePercent}%)`, amount: lateDeduct });
+                    lateDeduct = grossBonus * (pct * calculationData.lateTimes);
+                    deductions.push({ label: `มาสาย (${calculationData.lateTimes} ครั้ง)`, amount: lateDeduct });
                     totalDeductionAmount += lateDeduct;
                 }
-
                 if (calculationData.warningCount > 0) {
-                    const warningDeduct = this.config.deductions.warningAmount * calculationData.warningCount;
+                    warningDeduct = this.config.deductions.warningAmount * calculationData.warningCount;
                     deductions.push({ label: `หนังสือเตือน (${calculationData.warningCount} ใบ)`, amount: warningDeduct });
                     totalDeductionAmount += warningDeduct;
                 }
 
                 let netBonus = grossBonus + specialMoney + perfectAttendanceBonus - totalDeductionAmount;
-
                 if (calculationData.isSuspended) {
                     const pct = this.config.deductions.suspendPercent / 100;
-                    const suspendDeduct = netBonus * pct;
-                    deductions.push({ label: `ถูกพักงาน (หัก ${this.config.deductions.suspendPercent}%)`, amount: suspendDeduct });
+                    suspendDeduct = netBonus * pct;
+                    deductions.push({ label: `ถูกพักงาน (${this.config.deductions.suspendPercent}%)`, amount: suspendDeduct });
                     totalDeductionAmount += suspendDeduct;
                     netBonus = netBonus * (1 - pct);
                 }
-
                 if (netBonus < 0) netBonus = 0;
 
-                // Update UI with calculated data
-                this.updateResultUI({
-                    baseSalaryTotal,
-                    totalMonths,
-                    attendRate,
-                    perfRate,
-                    sumRates,
-                    serviceRate,
-                    specialMoney,
-                    perfectAttendanceBonus,
-                    deductions,
-                    netBonus
-                }, calculationData); // Pass calculationData explicitly
+                this.updateResultUI({ baseSalaryTotal, totalMonths, attendRate, perfRate, sumRates, serviceRate, specialMoney, perfectAttendanceBonus, deductions, netBonus }, calculationData);
+                
+                // RENDER CHARTS
+                this.renderCharts({ grossBonus, specialMoney, perfectAttendanceBonus, absentDeduct, lateDeduct, warningDeduct, suspendDeduct });
 
-                // Clear inputs automatically
                 this.silentClear();
-
                 this.showResult();
             },
 
             updateResultUI(res, sourceData) {
-                // Use sourceData if provided, otherwise fallback to this.data (legacy safety)
                 const d = sourceData || this.data;
-
                 document.getElementById('final-bonus-display').innerText = res.netBonus.toLocaleString('th-TH', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 document.getElementById('base-salary-display').innerText = res.baseSalaryTotal.toLocaleString();
                 document.getElementById('total-months-display').innerText = res.totalMonths.toFixed(2);
@@ -1119,26 +847,86 @@
 
                 const perfRow = document.getElementById('perfect-attendance-row');
                 if (res.perfectAttendanceBonus > 0) {
-                    perfRow.classList.remove('hidden');
-                    perfRow.classList.add('flex');
+                    perfRow.classList.remove('hidden'); perfRow.classList.add('flex');
                     document.getElementById('perfect-attendance-display').innerText = res.perfectAttendanceBonus.toLocaleString();
-                } else {
-                    perfRow.classList.add('hidden');
-                    perfRow.classList.remove('flex');
-                }
+                } else { perfRow.classList.add('hidden'); perfRow.classList.remove('flex'); }
 
                 const listEl = document.getElementById('deductions-list');
                 listEl.innerHTML = '';
                 if (res.deductions.length === 0) {
-                    listEl.innerHTML = '<div class="text-slate-400 text-sm italic py-2">- ไม่มีรายการหัก -</div>';
+                    listEl.innerHTML = '<div class="text-slate-400 text-sm italic py-2 text-center bg-slate-50 rounded-lg">- ไม่มีรายการหัก -</div>';
                 } else {
                     res.deductions.forEach(d => {
-                        listEl.innerHTML += `
-                            <div class="flex justify-between items-center text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg border border-rose-100">
-                                <span class="font-medium">${d.label}</span>
-                                <span class="font-bold">-${d.amount.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0})}</span>
-                            </div>
-                        `;
+                        listEl.innerHTML += `<div class="flex justify-between items-center text-sm text-rose-600 bg-rose-50 px-3 py-2 rounded-lg border border-rose-100"><span class="font-medium">${d.label}</span><span class="font-bold">-${d.amount.toLocaleString(undefined, {minimumFractionDigits:0, maximumFractionDigits:0})}</span></div>`;
+                    });
+                }
+            },
+
+            // --- CHART RENDERING ---
+            renderCharts(data) {
+                // Destroy old charts if exist
+                if (this.charts['composition']) this.charts['composition'].destroy();
+                if (this.charts['deduction']) this.charts['deduction'].destroy();
+
+                // 1. Composition Chart (Doughnut)
+                const ctxComp = document.getElementById('compositionChart').getContext('2d');
+                this.charts['composition'] = new Chart(ctxComp, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['โบนัสจากผลงาน', 'เงินช่วยเหลือพิเศษ', 'เบี้ยขยัน'],
+                        datasets: [{
+                            data: [data.grossBonus, data.specialMoney, data.perfectAttendanceBonus],
+                            backgroundColor: ['#1369a9', '#10b981', '#f59e0b'],
+                            borderWidth: 0,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { usePointStyle: true, font: { family: 'Sarabun' } } },
+                            tooltip: { callbacks: { label: (context) => ` ${context.label}: ${context.raw.toLocaleString()} บาท` } }
+                        },
+                        cutout: '70%'
+                    }
+                });
+
+                // 2. Deduction Chart (Bar)
+                const totalDeductions = data.absentDeduct + data.lateDeduct + data.warningDeduct + data.suspendDeduct;
+                const noDeductMsg = document.getElementById('no-deduction-msg');
+                const deductCanvas = document.getElementById('deductionChart');
+
+                if (totalDeductions === 0) {
+                    deductCanvas.style.display = 'none';
+                    noDeductMsg.classList.remove('hidden');
+                } else {
+                    deductCanvas.style.display = 'block';
+                    noDeductMsg.classList.add('hidden');
+                    const ctxDeduct = deductCanvas.getContext('2d');
+                    this.charts['deduction'] = new Chart(ctxDeduct, {
+                        type: 'bar',
+                        data: {
+                            labels: ['ขาดงาน', 'มาสาย', 'ใบเตือน', 'พักงาน'],
+                            datasets: [{
+                                label: 'จำนวนเงินที่หัก (บาท)',
+                                data: [data.absentDeduct, data.lateDeduct, data.warningDeduct, data.suspendDeduct],
+                                backgroundColor: ['#ef4444', '#f97316', '#eab308', '#64748b'],
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                tooltip: { callbacks: { label: (context) => ` -${context.raw.toLocaleString()} บาท` } }
+                            },
+                            scales: {
+                                y: { beginAtZero: true, grid: { display: false } },
+                                x: { grid: { display: false } }
+                            }
+                        }
                     });
                 }
             },
@@ -1153,10 +941,7 @@
                 this.hideAllPages();
                 document.getElementById('page-input').classList.remove('hidden');
                 document.querySelector('main').scrollTo(0, 0);
-                setTimeout(() => {
-                    const salInput = document.getElementById('salary');
-                    if(salInput) salInput.focus();
-                }, 100);
+                setTimeout(() => { const salInput = document.getElementById('salary'); if(salInput) salInput.focus(); }, 100);
             },
             
             showSettings() {
@@ -1177,48 +962,6 @@
                 ['page-input', 'page-result', 'page-settings', 'page-history'].forEach(id => {
                     document.getElementById(id).classList.add('hidden');
                 });
-            },
-            
-            // --- Custom Modal System to replace alert/confirm ---
-            showModal(message, type = 'alert', callback = null) {
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 modal-overlay z-50 flex items-center justify-center fade-in px-4';
-                modal.innerHTML = `
-                    <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl transform transition-all scale-100 border border-slate-100">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2.5 ${type === 'confirm' ? 'bg-amber-100 text-amber-600' : 'bg-indigo-100 text-indigo-600'} rounded-full">
-                                <i data-lucide="${type === 'confirm' ? 'help-circle' : 'info'}" class="w-6 h-6"></i>
-                            </div>
-                            <h3 class="text-lg font-bold text-slate-800">${type === 'confirm' ? 'ยืนยันการทำรายการ' : 'แจ้งเตือน'}</h3>
-                        </div>
-                        <p class="text-slate-600 mb-6 leading-relaxed text-sm font-medium">${message}</p>
-                        <div class="flex gap-3 justify-end">
-                            ${type === 'confirm' ? `<button id="modal-cancel" class="px-4 py-2 text-slate-500 font-bold hover:bg-slate-50 rounded-lg transition text-sm">ยกเลิก</button>` : ''}
-                            <button id="modal-ok" class="px-6 py-2 bg-[#1369a9] text-white font-bold rounded-lg hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-sm">ตกลง</button>
-                        </div>
-                    </div>
-                `;
-                
-                document.body.appendChild(modal);
-                lucide.createIcons();
-                
-                // Focus OK button for accessibility
-                const okBtn = modal.querySelector('#modal-ok');
-                setTimeout(() => okBtn.focus(), 50);
-
-                const close = () => {
-                    modal.classList.add('opacity-0');
-                    setTimeout(() => modal.remove(), 200);
-                };
-
-                okBtn.onclick = () => {
-                    close();
-                    if (callback) callback();
-                };
-
-                if (type === 'confirm') {
-                    modal.querySelector('#modal-cancel').onclick = close;
-                }
             }
         };
 
