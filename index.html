@@ -139,14 +139,21 @@
         </div>
 
         <div class="hidden md:block text-[10px] text-slate-400 text-center mt-4 pt-4 border-t border-slate-200">
-            เวอร์ชั่น <span id="footer-version" class="text-slate-600 font-bold">v2.0</span><br>SANKO 3+
+            เวอร์ชั่น <span id="footer-version" class="text-slate-600 font-bold">v2.1</span><br>SANKO 3+
         </div>
     </aside>
 
     <!-- Mobile Menu Overlay (White Theme) -->
     <div id="mobile-menu" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden md:hidden flex-col justify-end transition-opacity" onclick="app.toggleMobileMenu()">
         <div class="bg-white rounded-t-3xl p-6 text-slate-800 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
-            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+            <!-- Added Mobile Menu Logo -->
+            <div class="flex justify-center mb-6">
+                <img src="Gemini_Generated_Image_3c5x4m3c5x4m3c5x-Photoroom.png" 
+                     alt="SANKO Logo" 
+                     class="h-16 w-auto object-contain drop-shadow-sm"
+                     onerror="this.style.display='none';">
+            </div>
+            
             <button onclick="app.showInput(); app.toggleMobileMenu()" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-4 text-lg font-medium text-slate-700">
                 <i data-lucide="layout-dashboard" class="w-6 h-6 text-blue-600"></i> หน้าคำนวณ
             </button>
@@ -157,7 +164,7 @@
                 <i data-lucide="history" class="w-6 h-6 text-slate-400"></i> ประวัติการอัพเดท
             </button>
             <div class="text-center text-xs text-slate-400 pt-4">
-                เวอร์ชั่น <span id="mobile-menu-version">v2.0</span><br>SANKO 3+
+                เวอร์ชั่น <span id="mobile-menu-version">v2.1</span><br>SANKO 3+
             </div>
         </div>
     </div>
@@ -474,7 +481,7 @@
         const app = {
             // Default Config
             defaultConfig: {
-                version: '2.0', // UPDATED
+                version: '2.1', // UPDATED
                 year: 2025,
                 rates: { A: 1.8, B: 1.5, C: 1.2, D: 0.6, F: 0 },
                 specialMoney: [4000, 3000, 2000, 1000], 
@@ -485,7 +492,8 @@
                 ],
                 deductions: { absentPercent: 3, latePercent: 3, warningAmount: 1000, suspendPercent: 50 },
                 history: [
-                    { version: '2.0', date: new Date().toISOString(), details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme) และจัดกึ่งกลางโลโก้' },
+                    { version: '2.1', date: new Date().toISOString(), details: 'ปรับปรุง Favicon และเพิ่มไอคอนในเมนู Mobile' },
+                    { version: '2.0', date: '2025-01-03T05:00:00.000Z', details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme) และจัดกึ่งกลางโลโก้' },
                     { version: '1.9', date: '2025-01-03T04:30:00.000Z', details: 'เปลี่ยนธีมแถบด้านซ้ายเป็นสีขาว (White Theme)' },
                     { version: '1.8', date: '2025-01-03T04:00:00.000Z', details: 'ปรับแต่งส่วนหัวบนมือถือให้แสดงโลโก้ชัดเจน และเพิ่มไอคอนในเมนูมือถือ' },
                     { version: '1.7', date: '2025-01-03T03:30:00.000Z', details: 'เพิ่ม Favicon และไอคอนใน README' },
@@ -643,7 +651,7 @@
                     if(this.supabase) await this.supabase.from('bonus_config').upsert({ id: 1, config: this.config });
                     this.populateSettingsForm();
                     this.updateYearDisplays(this.config.year);
-                    this.updateVersionDisplays('1.9');
+                    this.updateVersionDisplays('2.1');
                     this.showModal('รีเซ็ตค่าเรียบร้อยแล้ว');
                 });
             },
